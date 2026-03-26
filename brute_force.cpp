@@ -105,7 +105,7 @@ int main() {
     }
     auto end_time = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
-    std::cout << "Total Collisions Found : " << total_collisions << "\n";
-    std::cout << "Time Taken (Brute Force): " << duration.count() << " milliseconds\n";
+    cout << "Total Collisions Found : " << total_collisions << "\n";
+    cout << "Time Taken (Brute Force): " << duration.count() << " milliseconds\n";
     return 0;
 }
