@@ -37,7 +37,7 @@ vector<Drone> loadDronesFromCSV(const string& filename)
     ifstream file(filename);
     if (!file.is_open())
     {
-        cerr << "Error, cant open file" << filename << "\n";
+        cerr << "Không mở được file" << filename << "\n";
         return drones;
     }
     string line;
@@ -75,7 +75,7 @@ int main() {
     vector<Drone> all_drones = loadDronesFromCSV("uav_data.csv");
     if (all_drones.empty())
     {
-        cout << "Error, no data found";
+        cout << "không tìm thấy dữ liệu của drone";
         return 1;
     }
     int simulation_time = 60;
@@ -105,7 +105,7 @@ int main() {
     }
     auto end_time = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(end_time - start_time);
-    cout << "Total Collisions Found : " << total_collisions << "\n";
-    cout << "Time Taken (Brute Force): " << duration.count() << " milliseconds\n";
+    cout << "Tổng số lần va chạm: " << total_collisions << "\n";
+    cout << "Thời gian chạy: " << duration.count() << " milliseconds\n";
     return 0;
 }
