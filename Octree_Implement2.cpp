@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+
 using namespace std;
 
 // ==========================================
@@ -62,15 +63,15 @@ public:
             }
         }
     }
-<<<<<<< HEAD
-    // Hàm xuất tọa độ các khối Octree ra file CSV
+
+    // Export Octree box coordinates to CSV file
     void exportBoxes(ofstream& file) 
     {
-        // Ghi tọa độ tâm và nửa kích thước của khối hiện tại
+        // Write the center coordinates and half_size of the current block
         file << center.x << "," << center.y << "," << center.z << "," << half_size << "\n";
         
-        // Nếu không phải là node lá, tiếp tục đệ quy xuống các khối con
-        if (is_leaf == false) 
+        // If it is not a leaf node, continue recursing down to child blocks
+        if (!is_leaf) 
         {
             for (int i = 0; i < 8; i++) 
             {
@@ -81,11 +82,8 @@ public:
             }
         }
     }
-    // Hàm kiểm tra xem 1 điểm có nằm trong khối này không
-=======
 
     // Check if the UAV is in the block
->>>>>>> 916a52e68b09f02c652a077b2cd11985210a3ece
     bool contains(Point p) 
     {
         return (p.x >= center.x - half_size && p.x <= center.x + half_size &&
@@ -235,7 +233,7 @@ int main()
     cout << "Data normalization to [0, 1] range completed." << endl;
 
     // ==========================================
-    // STEP 3: INSERT INTO OCTREE (Using the OctreeNode class above)
+    // STEP 3: INSERT INTO OCTREE
     // ==========================================
     Point root_center = {0, 0.5f, 0.5f, 0.5f}; // uav_id = 0, x = 0.5, y = 0.5, z = 0.5
     OctreeNode* root = new OctreeNode(root_center, 0.5f, 10); // Capacity of 10 UAVs/block
@@ -248,33 +246,29 @@ int main()
             inserted_count++;
         }
     }
-<<<<<<< HEAD
-    cout << "Da chen thanh cong " << inserted_count << " UAV vao Octree!" << endl;
+    cout << "Successfully inserted " << inserted_count << " UAVs into Octree!" << endl;
+
     // ==========================================
-    // BƯỚC 4: XUẤT DỮ LIỆU OCTREE RA FILE
+    // STEP 4: EXPORT OCTREE DATA TO FILE
     // ==========================================
     ofstream box_file("octree_boxes.csv");
     if (box_file.is_open()) 
     {
-        // Ghi dòng tiêu đề
+        // Write header
         box_file << "x,y,z,half_size\n";
         
-        // Bắt đầu đệ quy từ root để ghi tất cả các node
+        // Start recursing from root to write all nodes
         root->exportBoxes(box_file);
         
         box_file.close();
-        cout << "Da xuat file octree_boxes.csv thanh cong de hien thi 3D." << endl;
+        cout << "Successfully exported octree_boxes.csv for 3D visualization." << endl;
     } 
     else 
     {
-        cerr << "Loi: Khong the tao file octree_boxes.csv" << endl;
+        cerr << "Error: Cannot create file octree_boxes.csv" << endl;
     }
-    // Dọn dẹp bộ nhớ trước khi thoát chương trình
-=======
-    cout << "Successfully inserted " << inserted_count << " UAVs into Octree!" << endl;
 
     // Clean up memory before exiting the program
->>>>>>> 916a52e68b09f02c652a077b2cd11985210a3ece
     delete root;
 
     return 0;
