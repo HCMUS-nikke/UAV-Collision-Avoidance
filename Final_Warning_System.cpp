@@ -41,6 +41,8 @@ void check_collision(UAV_data A, UAV_data B, float safe_radius, float time_limit
     float a = dvx*dvx + dvy*dvy + dvz*dvz;
     float b =  2.0f * (dx*dvx + dy*dvy + dz*dvz);
     float c = dx*dx + dy*dy + dz*dz - safe_radius*safe_radius;
+    
+    if (a < 0.000001f) return;
 
     float delta = b*b - 4.0f*a*c;
 
@@ -79,7 +81,6 @@ void check_collision(UAV_data A, UAV_data B, float safe_radius, float time_limit
     
     return;
 }
-
 
 class OctreeNode 
 {
@@ -200,7 +201,6 @@ public:
         } 
         else 
         {
-            // Nếu là nhánh, hỏi tiếp 8 đứa con
             for (int i = 0; i < 8; ++i) 
             {
                 children[i]->query(target, range, found);
@@ -225,7 +225,6 @@ bool input(vector<Raw_data>& input_data, const string& Input_file)
         stringstream ss(line);
         Raw_data uav;
 
-        // Băm chuỗi (Bạn nhớ chỉnh lại thứ tự này cho khớp với file CSV bạn tự chế nhé)
         getline(ss, token, ','); uav.id = stoi(token);
         getline(ss, token, ','); uav.lat = stof(token);
         getline(ss, token, ','); uav.lon = stof(token);
@@ -270,38 +269,23 @@ bool normalizing(vector<Raw_data>& input_data, vector<UAV_data>& normalized_data
         UAV_data p;
         p.id = uav.id;
         
-        // Chuyển tọa độ về [-1, 1]
+       
         p.x = 2.0f * ((uav.lon - min_lon) / (max_lon - min_lon)) - 1.0f; 
         p.y = 2.0f * ((uav.lat - min_lat) / (max_lat - min_lat)) - 1.0f;
         p.z = 2.0f * ((uav.alt - min_alt) / (max_alt - min_alt)) - 1.0f;
 
-        // Tính toán vector vận tốc từ vận tốc, yaw và pitch
+       
         float temp_vx = uav.vel * cos(uav.pitch * M_PI / 180.0f) * sin(uav.yaw * M_PI / 180.0f) ;
         float temp_vy =  uav.vel * cos(uav.pitch * M_PI / 180.0f) * cos(uav.yaw * M_PI / 180.0f);
         float temp_vz = uav.vel * sin(uav.pitch * M_PI / 180.0f);
 
-        // Cực kỳ quan trọng: Vận tốc cũng phải bị Scale theo cùng tỷ lệ không gian
-        p.vx = 2.0f * temp_vx / (max_lon - min_lon) - 1.0f;
-        p.vy = 2.0f * temp_vy / (max_lat - min_lat) - 1.0f;
-        p.vz = 2.0f * temp_vz / (max_alt - min_alt) - 1.0f;
+        p.vx = 2.0f * temp_vx / (max_lon - min_lon);
+        p.vy = 2.0f * temp_vy / (max_lat - min_lat);
+        p.vz = 2.0f * temp_vz / (max_alt - min_alt);
 
         normalized_data.push_back(p);
     }
     cout << "Data normalization to [-1, 1] range completed." << endl;
-    return 1;
-}
-
-bool buildTree(OctreeNode* root, vector<UAV_data>& normalized_data) 
-{
-    int inserted_count = 0;
-    for (UAV_data i : normalized_data) 
-    {
-        if (root->insert(i)) 
-        {
-            inserted_count++;
-        }
-    }
-    cout << "Successfully inserted " << inserted_count << " UAVs into Octree!" << endl;
     return 1;
 }
 
@@ -323,42 +307,43 @@ int main ()
         return -1;
     }
 
-
-    Point3d root_center = {0.0f, 0.0f, 0.0f};
-    int max_capacity = 5; 
-    OctreeNode* root = new OctreeNode(root_center, 1.0f, max_capacity);
-    if(!buildTree(root, normalized_data))
-    {
-        cerr << "Error: Building Octree failed." << std::endl;
-        return -1;
-    }
-
-   
-    cout << "\n---Collision warning system is loading---" << endl;
-    
+    int Total_UAVs = 50;
+    int TOTAL_FRAMES = 1000;
     float search_range = 0.2f;   
     float safe_radius = 0.05f;   
-    float time_limit = 5.0f;    
+    float time_limit = 5.0f;
     bool check[55][55] = {};
-
-    for (UAV_data uav : normalized_data) 
+    
+    for (int f = 0; f < TOTAL_FRAMES; f++) 
     {
-        vector <UAV_data> neighbors;
+        OctreeNode* root = new OctreeNode({0,0,0}, 1.0f, 5);
+        int start = f * Total_UAVs;
         
-        root->query(uav, search_range, neighbors);
-
-        for (UAV_data neighbor : neighbors) 
+        for (int i = 0; i < Total_UAVs; i++) 
         {
-            if (uav.id < neighbor.id && !check[uav.id][neighbor.id]) 
+            root->insert(normalized_data[start + i]);
+        }
+
+         
+
+        for (int i = 0; i < Total_UAVs; i++) 
+        {
+            UAV_data current = normalized_data[start + i];
+            vector<UAV_data> neighbors;
+            root->query(current, search_range, neighbors);
+
+            for (UAV_data uav : neighbors) 
             {
-                check_collision(uav, neighbor, safe_radius, time_limit, check);
+                if (current.id < uav.id && !check[current.id][uav.id]) 
+                {
+                    check_collision(current, uav, safe_radius, time_limit, check);
+                }
             }
         }
+
+        delete root;
     }
 
-    cout << "Done!" << endl;
-
-    delete root;
-
+    cout << "Simulation Done!" << endl;
     return 0;
 }
