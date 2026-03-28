@@ -156,7 +156,7 @@ def octree_collisions(positions, active, radius, root):
                 diff = positions[i] - positions[j]
                 d = np.linalg.norm(diff)
                 if d < radius:
-                    force = (diff / (d + 1e-9)) * (radius - d) * 0.4
+                    force = (diff / (d + 1e-9)) * (radius - d)
                     repulsion[i] += force
                     repulsion[j] -= force
                     is_dodging[i] = True
@@ -164,15 +164,21 @@ def octree_collisions(positions, active, radius, root):
     return repulsion, is_dodging
 
 def step_physics(positions, targets, status, repulsion, is_dodging):
-    active = status != 1
-    diff = targets - positions
-    dist = np.linalg.norm(diff, axis = 1, keepdims = True)
-    move = np.where(active[:, None], diff / (dist + 1e-9) * SPEED_SCALE, 0.0)
-    positions[active] += move[active] + repulsion[active]
-    arrived_dist = np.linalg.norm(targets - positions, axis = 1)
-    status[(status != 1) & (arrived_dist < ARRIVAL_DIST)] = 1  
-    status[(status != 1) & is_dodging] = 2  
-    status[(status != 1) & ~is_dodging] = 0  
+    n = len(positions)
+    for i in range(n):
+        if status[i] == 1:
+            continue
+        diff = targets[i] - positions[i]
+        dist = np.linalg.norm(diff)
+        move = (diff / (dist + 1e-9)) * SPEED_SCALE
+        positions[i] += move + repulsion[i]
+        new_dist = np.linalg.norm(targets[i] - positions[i])
+        if new_dist < ARRIVAL_DIST:
+            status[i] = 1
+        elif is_dodging[i]:
+            status[i] = 2
+        else:
+            status[i] = 0
     # 1 = arrive, 2 = dodge, 0 = traveling
 
 def run_simulation(mode: str, num_drones: int):
