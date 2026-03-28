@@ -4,54 +4,115 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <cmath> 
+
 using namespace std;
 
-// ==========================================
-// Part 1: Data structure
-// ==========================================
-// The raw data pre-processing
-struct RawUAV 
+struct Raw_data 
 {
     int id;
     float lat, lon, alt;
+    float vel, yaw, pitch; 
 };
 
-// Data after processing 
-struct Point 
+struct Point3d
 {
-    int uav_id;
     float x, y, z; 
 };
 
-// ==========================================
-// Part 2: Octree implementation
-// ==========================================
+struct UAV_data
+{
+    int id;
+    float x, y, z;
+    float vx, vy, vz; 
+};
+
 class OctreeNode 
 {
 private:
-    Point center;               // The block center
-    float half_size;            // Distance from center to surface
-    int max_points;             // Max capacity
-    vector<Point> points;       // List of UAVs in 1 block
-    OctreeNode* children[8];    // Pointer to 8 child nodes
-    bool is_leaf;               // Check if the node is a leaf or not
+    Point3d center;
+    float half_size;
+    int max_capacity;
+    vector <UAV_data> uavs;
+    bool is_leaf;
+    OctreeNode* children[8];
+
+    void subdivide()
+    {
+        float new_size = half_size / 2.0f;
+        children[0] = new OctreeNode({center.x + new_size, center.y + new_size, center.z + new_size}, new_size, max_capacity);
+        children[1] = new OctreeNode({center.x + new_size, center.y + new_size, center.z - new_size}, new_size, max_capacity);
+        children[2] = new OctreeNode({center.x + new_size, center.y - new_size, center.z + new_size}, new_size, max_capacity);
+        children[3] = new OctreeNode({center.x + new_size, center.y - new_size, center.z - new_size}, new_size, max_capacity);
+        children[4] = new OctreeNode({center.x - new_size, center.y + new_size, center.z + new_size}, new_size, max_capacity);
+        children[5] = new OctreeNode({center.x - new_size, center.y + new_size, center.z - new_size}, new_size, max_capacity);
+        children[6] = new OctreeNode({center.x - new_size, center.y - new_size, center.z + new_size}, new_size, max_capacity);
+        children[7] = new OctreeNode({center.x - new_size, center.y - new_size, center.z - new_size}, new_size, max_capacity);
+        is_leaf = false;
+
+        for (UAV_data i : uavs) 
+        {
+            for (int j = 0; j < 8; j++) 
+            {
+                if (children[j]->insert(i)) 
+                {
+
+                    break;
+                }
+            }
+        }
+        uavs.clear();
+    }
 
 public:
-    // Node init
-    OctreeNode(Point c, float h_size, int max_p) 
+    OctreeNode(Point3d c, float h_size, int max_cap)
     {
         center = c;
         half_size = h_size;
-        max_points = max_p;
+        max_capacity = max_cap;
         is_leaf = true;
         for (int i = 0; i < 8; i++)
         {
             children[i] = nullptr;
         }
-            
     }
 
-    // Destructor to free memory (prevent memory leak)
+    bool contains(UAV_data uav) 
+    {
+        return (uav.x >= center.x - half_size && uav.x < center.x + half_size &&
+                uav.y >= center.y - half_size && uav.y < center.y + half_size &&
+                uav.z >= center.z - half_size && uav.z < center.z + half_size);
+    }
+    
+    bool insert(UAV_data uav) 
+    {
+        if (!contains(uav))
+        {
+            return false;
+        }
+        if (is_leaf) 
+        {
+            if (uavs.size() < max_capacity) 
+            {
+                uavs.push_back(uav);
+                return true;
+            } 
+            else 
+            {
+                subdivide();
+            }
+        }
+        for (int i = 0; i < 8; ++i) 
+        {
+            if (children[i]->insert(uav)) 
+            {
+                return true;
+            }
+                
+        }
+        return false;
+    }
+
     ~OctreeNode() 
     {
         if (!is_leaf) 
@@ -63,173 +124,31 @@ public:
         }
     }
 
-    // Check if the UAV is in the block
-    bool contains(Point p) 
+    
+    void query(UAV_data target, float range, vector<UAV_data>& found) 
     {
-        return (p.x >= center.x - half_size && p.x <= center.x + half_size &&
-                p.y >= center.y - half_size && p.y <= center.y + half_size &&
-                p.z >= center.z - half_size && p.z <= center.z + half_size);
-    }
-
-    // To divide a current block into 8 parts
-    void subdivide() 
-    {
-        float quarter = half_size / 2.0f;
-        int i = 0;
-        // Iterate through 8 corners to create 8 child nodes
-        for (int x = -1; x <= 1; x += 2) 
-        {
-            for (int y = -1; y <= 1; y += 2) 
-            {
-                for (int z = -1; z <= 1; z += 2) 
-                {
-                    Point child_center = {0, center.x + x * quarter, center.y + y * quarter, center.z + z * quarter};
-                    children[i++] = new OctreeNode(child_center, quarter, max_points);
-                }
-            }
-        }
-        is_leaf = false;
         
-        // Move current UAVs down to child nodes
-        for (auto& p : points) 
+        if (target.x + range < center.x - half_size || target.x - range > center.x + half_size ||
+            target.y + range < center.y - half_size || target.y - range > center.y + half_size ||
+            target.z + range < center.z - half_size || target.z - range > center.z + half_size) 
         {
-            for (int j = 0; j < 8; ++j) 
+            return;
+        }
+
+        if (is_leaf) 
+        {
+            
+            for (UAV_data p : uavs) 
             {
-                if (children[j]->insert(p)) break;
+                if (p.id != target.id) found.push_back(p);
+            }
+        } 
+        else 
+        {
+            for (int i = 0; i < 8; ++i) 
+            {
+                children[i]->query(target, range, found);
             }
         }
-        points.clear(); // Parent node no longer contains UAVs directly
-    }
-
-    // Function to insert UAV into the tree
-    bool insert(Point p) 
-    {
-        // If the point is not in this block, ignore it
-        if (!contains(p)) return false;
-
-        // If the block is not subdivided and still has capacity
-        if (is_leaf && points.size() < max_points) 
-        {
-            points.push_back(p);
-            return true;
-        }
-
-        // If the block is full, subdivide it (if not already)
-        if (is_leaf) subdivide();
-
-        // Try to insert into child nodes
-        for (int i = 0; i < 8; ++i) 
-        {
-            if (children[i]->insert(p)) return true;
-        }
-        return false;
     }
 };
-
-// ==========================================
-// PART 3: MAIN FUNCTION - EXECUTION
-// ==========================================
-int main() 
-{
-    vector<RawUAV> raw_data;
-    string filename = "uav_data.csv";
-    
-    // ==========================================
-    // STEP 1: READ CSV FILE
-    // ==========================================
-    ifstream file(filename);
-    if (!file.is_open()) 
-    {
-        cerr << "Error: Cannot open file " << filename << std::endl;
-        return 1;
-    }
-
-    string line;
-    // Skip the first header line
-    getline(file, line); 
-
-    while (getline(file, line)) 
-    {
-        stringstream ss(line);
-        string token;
-        RawUAV uav;
-
-        // Column 0: UAV_ID
-        getline(ss, token, ',');
-        uav.id = stoi(token);
-
-        // Column 1: Timestamp (Skip and do not save)
-        getline(ss, token, ',');
-
-        // Column 2: Latitude
-        getline(ss, token, ',');
-        uav.lat = stof(token);
-
-        // Column 3: Longitude
-        getline(ss, token, ',');
-        uav.lon = stof(token);
-
-        // Column 4: Altitude
-        getline(ss, token, ',');
-        uav.alt = stof(token);
-
-        // Add to list
-        raw_data.push_back(uav);
-    }
-    file.close();
-    cout << "Finished reading " << raw_data.size() << " lines of data." << endl;
-
-    // ==========================================
-    // STEP 2: NORMALIZE DATA (MIN-MAX SCALING)
-    // ==========================================
-    if (raw_data.empty()) return 0;
-
-    // Find Min and Max values of the 3 axes
-    float min_lat = raw_data[0].lat, max_lat = raw_data[0].lat;
-    float min_lon = raw_data[0].lon, max_lon = raw_data[0].lon;
-    float min_alt = raw_data[0].alt, max_alt = raw_data[0].alt;
-
-    for (const auto& uav : raw_data) 
-    {
-        if (uav.lat < min_lat) min_lat = uav.lat;
-        if (uav.lat > max_lat) max_lat = uav.lat;
-        if (uav.lon < min_lon) min_lon = uav.lon;
-        if (uav.lon > max_lon) max_lon = uav.lon;
-        if (uav.alt < min_alt) min_alt = uav.alt;
-        if (uav.alt > max_alt) max_alt = uav.alt;
-    }
-
-    vector<Point> normalized_data;
-    for (const auto& uav : raw_data) 
-    {
-        Point p;
-        p.uav_id = uav.id;
-        // Apply formula (X - Min) / (Max - Min)
-        p.x = (uav.lon - min_lon) / (max_lon - min_lon); // X-axis is usually Longitude
-        p.y = (uav.lat - min_lat) / (max_lat - min_lat); // Y-axis is usually Latitude
-        p.z = (uav.alt - min_alt) / (max_alt - min_alt); // Z-axis is Altitude
-        normalized_data.push_back(p);
-    }
-    cout << "Data normalization to [0, 1] range completed." << endl;
-
-    // ==========================================
-    // STEP 3: INSERT INTO OCTREE (Using the OctreeNode class above)
-    // ==========================================
-    Point root_center = {0, 0.5f, 0.5f, 0.5f}; // uav_id = 0, x = 0.5, y = 0.5, z = 0.5
-    OctreeNode* root = new OctreeNode(root_center, 0.5f, 10); // Capacity of 10 UAVs/block
-    
-    int inserted_count = 0;
-    for (const auto& p : normalized_data) 
-    {
-        if (root->insert(p)) 
-        {
-            inserted_count++;
-        }
-    }
-    cout << "Successfully inserted " << inserted_count << " UAVs into Octree!" << endl;
-
-    // Clean up memory before exiting the program
-    delete root;
-
-    return 0;
-}
