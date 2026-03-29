@@ -144,7 +144,12 @@ class OctreeNode:
         if not self.intersects_sphere(sx, sy, sz, r):
             return
         if self.is_leaf:
-            result.extend(self.indices)
+            r_sq = r * r
+            for idx in self.indices:
+                px, py, pz = self.points[idx]     
+                ex, ey, ez = px - sx, py - sy, pz - sz
+                if ex*ex + ey*ey + ez*ez <= r_sq: 
+                    result.append(idx)
         else:
             for child in self.children:
                 if child is not None:
