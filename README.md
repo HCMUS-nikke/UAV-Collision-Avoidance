@@ -17,15 +17,19 @@
       + Standardised the data to coordinates in the simulation space.
       + Calculated movement vectors from the velocity, yaw, and pitch values.
     
-## Algorithm Hypotheses
-
+## Algorithm hypotheses for avoiding collisions
+- The Octree structure space will be divided into 8 equal parts for each subdivision, until the number of drones in a cube is smaller than the allowed amounts.
+- To check whether a drone would collide with one another, our program will query the drones in an Octree node with a safety "barrier" around it to check whether one drone's barrier collide with another's. This will help having to query drones far away from each other to check for collisions.
+- When two drone's safety barriers collide or their movement vectors suggest that they will collide, the force needed to alter the drones' paths will be calculated to change their flight path:  
+        ```py
+        if d < radius:
+            if d < collision_rad:
+                collisions_count += 1
+            force = (diff / (d + 1e-9)) * (radius - d)
+            repulsion[i] += force
+            repulsion[j] -= force
+        ```
 ## Implementation
-- Briefly describe the implemetation.
-    - How to set up the enviroment to run the source code and required steps to replicate the results
-    - Discuss the concrete implementation if there are any essential details
-    - How to run each step from `In-sample Backtesting`, Step 4 to `Out-of-sample Backtesting`, Step 6 (or `Paper Trading`, Step 7).
-    - How to change the algorithm configurations for different run.
-- Most important section and need the most details to correctly replicate the results.
 
 ## Optimization
 
