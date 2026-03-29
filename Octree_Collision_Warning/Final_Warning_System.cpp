@@ -196,7 +196,13 @@ public:
    
             for (UAV_data p : uavs) 
             {
-                if (p.id != target.id) found.push_back(p);
+                if (p.id != target.id) 
+                {
+                    float ex = p.x - target.x;
+                    float ey = p.y - target.y;
+                    float ez = p.z - target.z;
+                    if (ex*ex + ey*ey + ez*ez <= range*range) found.push_back(p);
+                }
             }
         } 
         else 
@@ -259,9 +265,9 @@ bool normalizing(vector<Raw_data>& input_data, vector<UAV_data>& normalized_data
         min_lat = min(min_lat, i.lat);
         max_lat = max(max_lat, i.lat);
         min_lon = min(min_lon, i.lon);
-        max_lon = max(min_lon, i.lon);
+        max_lon = max(max_lon, i.lon);
         min_alt = min(min_alt, i.alt);
-        max_alt = max(min_alt, i.alt);
+        max_alt = max(max_alt, i.alt);
     }
     
     for (Raw_data uav : input_data) 
@@ -293,7 +299,7 @@ bool normalizing(vector<Raw_data>& input_data, vector<UAV_data>& normalized_data
 int main ()
 {
     vector <Raw_data> input_data;
-    string Input_file = "input_data.csv";
+    string Input_file = "uav_data.csv";
     if(!input(input_data, Input_file))
     {
         cerr << "Error: Cannot open file " << Input_file << std::endl;
