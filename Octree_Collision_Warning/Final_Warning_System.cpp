@@ -173,7 +173,7 @@ public:
     {
         if (!is_leaf) 
         {
-            for (int i = 0; i < 8; ++i) 
+            for (int i = 0; i < 8; i++) 
             {
                 delete children[i];
             }
@@ -207,7 +207,7 @@ public:
         } 
         else 
         {
-            for (int i = 0; i < 8; ++i) 
+            for (int i = 0; i < 8; i++) 
             {
                 children[i]->query(target, range, found);
             }
