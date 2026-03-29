@@ -21,15 +21,37 @@
 - The Octree structure space will be divided into 8 equal parts for each subdivision, until the number of drones in a cube is smaller than the allowed amounts.
 - To check whether a drone would collide with one another, our program will query the drones in an Octree node with a safety "barrier" around it to check whether one drone's barrier collide with another's. This will help having to query drones far away from each other to check for collisions.
 - When two drone's safety barriers collide or their movement vectors suggest that they will collide, the force needed to alter the drones' paths will be calculated to change their flight path:  
-        ```py
+        
         if d < radius:
             if d < collision_rad:
                 collisions_count += 1
             force = (diff / (d + 1e-9)) * (radius - d)
             repulsion[i] += force
             repulsion[j] -= force
-        ```
+
 ## Implementation
+- To run the collision warning system:
+  + Run the data_generate.cpp file to generate the data needed. The number of drones can be changed through modifying the config in the main() function.
+  + We can now run the Final_Warning_System.cpp to get our results:
+
+ - To run 3D drone simulations and benchmarks:
+ - <img width="551" height="241" alt="sample_output" src="https://github.com/user-attachments/assets/0da518a7-f3f0-4d1f-868d-551eb6217738" />
+
+ - Create a venv:
+ -     python -m venv venv
+ - Activate it:
+ -     venv\Scripts\activate
+ - Install the dependencies:
+ -     pip install -r requirements.txt
+ - For our simulations we can tweak the following parameters in the final_visualizer.py file:
+    + SPEED_SCALE: Tweak drone speed.
+    + DODGE_RADIUS: Tweak the radius where warnings will be given for drone collisions.
+    + COLLISION_RADIUS: Tweak the radius of the safety barrier that count drones as collided.
+    + ARRIVAL_DIST: Tweak the distance the drone need to reach.
+    + MISSION_DIST: Tweak the original distance between the drone and the target.
+    + WORLD_SIZE: Tweak the world size of the simulation.
+    + OCTREE_CAPACITY: Tweak the maximum amount of drones in one node.
+   
 
 ## Optimization
 
