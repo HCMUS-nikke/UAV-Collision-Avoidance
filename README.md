@@ -43,6 +43,8 @@
  -     venv\Scripts\activate
  - Install the dependencies:
  -     pip install -r requirements.txt
+ - We can now run the final_visualizer.py file for simulations. Select 1 or 2 for simulating brute force and Octree algorithms:
+ -     python final_visualizer.py
  - For our simulations we can tweak the following parameters in the final_visualizer.py file:
     + SPEED_SCALE: Tweak drone speed.
     + DODGE_RADIUS: Tweak the radius where warnings will be given for drone collisions.
@@ -51,15 +53,20 @@
     + MISSION_DIST: Tweak the original distance between the drone and the target.
     + WORLD_SIZE: Tweak the world size of the simulation.
     + OCTREE_CAPACITY: Tweak the maximum amount of drones in one node.
-   
-
-## Optimization
-
-## Comparison
-
-## Benchmarks and conclusions
+- In our 3D drone simulation we can see:
+  + Little yellow transparent dots as the destination that the drones need to reach.
+  + Drones are colored as cyan, green, and red dots. Cyan means that they are traveling, green means that they've reached their destination, and red means that they've either collided or is in the process of dodging.
+  + During the simulation we can see parameters such as the total dodge count, active drones, build, queries,...
+  <img width="726" height="507" alt="sample_visualization" src="https://github.com/user-attachments/assets/59f437f6-e9cb-437a-832d-74b74abbfd3c" />
+  (Image for reference)
+- We can also run the 3rd option to run pure benchmarks without opening the 3D simulation. There are two options to select from. The Standard Benchmark which will simply run a simulation with X amounts of drones, and the varied benchmarks which will test more aspects of each algorithms.
+- Charts will be generated in the benchmark_results folder.
+<img width="800" height="600" alt="scaling_curve" src="https://github.com/user-attachments/assets/4dfdce7e-b3a0-499d-a67f-af23b1fc9e43" />
+(Example chart)
+## Benchmarks, comparisons conclusions
 - What is the conclusion?
 - Optional
+
 
 ## Reference
 - https://www.kaggle.com/datasets/ziya07/uav-coordination-dataset/data
