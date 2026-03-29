@@ -63,10 +63,39 @@
 - Charts will be generated in the benchmark_results folder.
 <img width="800" height="600" alt="scaling_curve" src="https://github.com/user-attachments/assets/4dfdce7e-b3a0-499d-a67f-af23b1fc9e43" />
 (Example chart)
-## Benchmarks, comparisons conclusions
-- What is the conclusion?
-- Optional
 
+## Benchmarks, comparisons, and conclusions
+
+<img width="800" height="600" alt="scaling_curve" src="https://github.com/user-attachments/assets/03a2b441-f100-43a7-ae44-4a7b17c20910" />
+
+<img width="800" height="600" alt="scaling_curve_crossover" src="https://github.com/user-attachments/assets/115a4717-0ad2-41b9-a360-a0c33ba38ffe" />
+
+
+Looking at the two charts above. In the first chart, since Brute Force has a complexity of O(n^2), its growth rate is much faster than the Octree algorithm, which only has a complexity of O(n log n). However, for a smaller number of drones, around 32 or fewer, Brute Force is actually faster than Octree. 
+
+This is because Octree requires time and overhead to initialize the tree. Even though this initialization only takes a few milliseconds, it makes up a larger portion of the total time when dealing with a small number of drones. 
+
+Therefore, calculating directly with the Brute Force method is noticeably faster for smaller drone counts since it skips this initialization step. Once the number of drones passes this mark, Octree becomes a lot faster.
+
+<img width="800" height="600" alt="capacity_time_impact" src="https://github.com/user-attachments/assets/927e8713-3e08-4b02-934b-4d3ad93ffd59" />
+
+
+An important finding the we found out is that the optimization of node capacity (the maximum capacity of each cube) before it subdivides. Based on the graph, if the node capacity is too small, the tree will branch out too deeply, which will have higher memory usage and longer traversal times. If the capacity is too large, it results in too many checks, making it essentially no different from Brute Force. 
+
+After testing, the optimal node capacity was found to be between 6 and 12, depending on the number of drones. These nodes are small enough to filter out drones that are on the opposite side or too far from the calculation area, yet large enough so that the Octree algorithm does not have to create additional branches for nearby drones.
+
+<img width="800" height="600" alt="clustering_penalty" src="https://github.com/user-attachments/assets/4e2a97ac-9ba4-4d22-a17b-17c83ad19164" />
+
+
+In addition, we also did a stress tests. When the drones are not evenly distributed but instead clustered in one place, the tree becomes unbalanced. This causes the processing time to increase significantly.
+
+<img width="800" height="600" alt="scaling_curve_crossover" src="https://github.com/user-attachments/assets/3da34de8-6817-4c4b-b3c0-f0e7a64ac8c8" />
+
+Furthermore, when measuring the number of collisions, both the Brute Force and Octree algorithms recorded a total of zero collisions during the scaling test from 0 to 400 drones. The overlap of these two graph lines proves that even though the Octree algorithm divides the operating space into smaller areas to reduce the number of calculations, it still ensures absolute accuracy. It does not miss any potential collisions or produce skewed results compared to scanning every single pair of elements in the Brute Force method. 
+
+This confirms that Octree can optimize runtime performance without sacrificing the reliability of the warning system.
+
+Through benchmarking and analyzing the charts, we have concluded both the effectiveness and the weaknesses of the Octree algorithm.
 
 ## Reference
 - https://www.kaggle.com/datasets/ziya07/uav-coordination-dataset/data
