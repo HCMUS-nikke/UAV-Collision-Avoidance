@@ -315,7 +315,7 @@ int main ()
 
     int Total_UAVs = 50;
     int TOTAL_FRAMES = 1000;
-    float search_range = 0.2f;   
+    float search_range = 0.3f;   
     float safe_radius = 0.05f;   
     float time_limit = 5.0f;
     bool check[55][55] = {};
