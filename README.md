@@ -43,5 +43,12 @@
 - All the reference goes here.
 
 ## Other information
-- Link to the Final Report (Paper) should be somewhere in the `README.md` file.
-- Please make sure this file is relatively easy to follow.
+- https://docs.pyvista.org/index.html
+-     For the drone visualization
+- https://math.stackexchange.com/questions/2618527/converting-from-yaw-pitch-roll-to-vector
+-     For the formula to get direction vector for updating the drone coordinates every frame
+- https://youtu.be/vwUNtmhPVE0?si=3Jh-DMby4HXXwU_H
+-     For the dodging mechanisms
+- https://editor.p5js.org/curiouser.kate/full/TJTG-mKVP
+-     For the basic Octree visualization
+- Claude and Gemini for carrying our group in the process of building the visualization and helping in understanding the Octree algorithm.
