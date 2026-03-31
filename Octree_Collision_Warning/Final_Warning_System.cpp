@@ -299,7 +299,7 @@ bool normalizing(vector<Raw_data>& input_data, vector<UAV_data>& normalized_data
 int main ()
 {
     vector <Raw_data> input_data;
-    string Input_file = "uav_data.csv";
+    string Input_file = "input_data_50_01.csv";
     if(!input(input_data, Input_file))
     {
         cerr << "Error: Cannot open file " << Input_file << std::endl;
