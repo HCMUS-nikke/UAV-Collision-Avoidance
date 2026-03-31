@@ -141,15 +141,12 @@ class OctreeNode:
     def query_radius(self, sx, sy, sz, r, result: list, metrics: dict):
         if metrics is not None:
             metrics["queries"] += 1
+            
         if not self.intersects_sphere(sx, sy, sz, r):
             return
+            
         if self.is_leaf:
-            r_sq = r * r
-            for idx in self.indices:
-                px, py, pz = self.points[idx]     
-                ex, ey, ez = px - sx, py - sy, pz - sz
-                if ex*ex + ey*ey + ez*ez <= r_sq: 
-                    result.append(idx)
+            result.extend(self.indices)
         else:
             for child in self.children:
                 if child is not None:
@@ -465,6 +462,8 @@ def plot_advanced_report(folder, scaling_data, cluster_data, var_data, overhead_
     drones = [d['drones'] for d in scaling_data]
     bf_times = [d['bf_time'] for d in scaling_data]
     oc_times = [d['oc_time'] for d in scaling_data]
+    bf_cols = [d['bf_cols'] for d in scaling_data]
+    oc_cols = [d['oc_cols'] for d in scaling_data]
 
     plt.figure(figsize=(8, 6))
     plt.plot(drones, bf_times, marker='o', color='red', label='Brute Force O(n^2)')
@@ -475,6 +474,17 @@ def plot_advanced_report(folder, scaling_data, cluster_data, var_data, overhead_
     plt.legend()
     plt.grid(True)
     plt.savefig(f"{folder}/scaling_curve_full.png")
+    plt.close()
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(drones, bf_cols, marker='o', color='red', linestyle='--', label='Brute Force Collisions')
+    plt.plot(drones, oc_cols, marker='^', color='blue', linestyle='-', label='Octree Collisions')
+    plt.title('Algorithm Scaling: Hard Collisions')
+    plt.xlabel('Number of Drones')
+    plt.ylabel('Total Collisions Recorded')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(f"{folder}/scaling_collisions.png")
     plt.close()
 
     low_drones = [d['drones'] for d in scaling_data if d['drones'] <= 50]
@@ -639,7 +649,15 @@ def run_benchmark_suite():
                 print(f"Testing {d} drones...")
                 bf = run_headless_simulation("brute", d, frames, 8)
                 oc = run_headless_simulation("octree", d, frames, 8)
-                scaling_data.append({'drones': d, 'bf_time': bf['time_ms'], 'oc_time': oc['time_ms']})
+                
+                scaling_data.append({
+                    'drones': d, 
+                    'bf_time': bf['time_ms'], 
+                    'oc_time': oc['time_ms'],
+                    'bf_cols': bf['collisions'],
+                    'oc_cols': oc['collisions']
+                })
+                
                 overhead_data.append({'drones': d, 'builds': oc['build_times'], 'queries': oc['query_times']})
             
             print("\nRunning Variance and False Positive Analysis (400 drones)...")
